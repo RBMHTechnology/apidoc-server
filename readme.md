@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/RBMHTechnology/apidoc-server.svg?branch=master)](https://travis-ci.org/RBMHTechnology/apidoc-server)
+
 # ApiDoc Server
 
 The ApiDoc Server is a web-application that transparently extracts api documentation artifacts from a Maven Repository and serves the content to the user. It is written in Java 8 and built on top of [Spring Boot](http://projects.spring.io/spring-boot/). The ApiDoc Server
