@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+<title th:text="${name}">ApiDoc Server</title>
+
+<!-- Bootstrap -->
+<link href="/bootstrap.min.css" rel="stylesheet"></link>
+<link href="/custom.css" rel="stylesheet"></link>
+</head>
+<body>
+
+	<div class="container">
+
+		<div class="apidocserver">
+			<div class="jumbotron">
+				<h1 th:text="${name}">ApiDoc Server</h1>
+				<p>
+					Serving API documentation from <a th:attr="href=${repositoryUrl}" th:text="${repositoryUrl}" href="http://localhost:8080">http://localhost:8080</a><span th:if="${not #lists.isEmpty(groupIdWhitelist)}"> with group id prefix whitelist: <em th:text="${#strings.listJoin(groupIdWhitelist,', ')}">foo, bar, zet</em></span>. 
+				</p>
+			</div>
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h3 class="panel-title">Available Versions for <span th:text="${groupId} + ':' + ${artifactId}" >joda-time:joda-time</span></h3>
+				</div>
+				<div class="panel-body">
+					<ul class="list-group">
+    					<a href="#" th:each="version : ${versions}" th:text="${version}" th:attr="href='/'+ ${groupId} + '/' + ${artifactId} +  '/' + ${version}" class="list-group-item">Vestibulum at eros</a>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<hr/>
+		<p style="text-align:center">ApiDoc Server <span th:text="${applicationVersion}">v0.1.0</span> · <a href="https://github.com/RBMHTechnology/apidoc-server">GitHub</a></p>
+
+	</div>
+	<!-- /.container -->
+
+</body>
+</html>

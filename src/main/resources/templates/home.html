@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+<title th:text="${name}">ApiDoc Server</title>
+
+<!-- Bootstrap -->
+<link href="/bootstrap.min.css" rel="stylesheet"></link>
+<link href="/custom.css" rel="stylesheet"></link>
+</head>
+<body>
+
+	<div class="container">
+
+		<div class="apidocserver">
+			<div class="jumbotron">
+				<h1 th:text="${name}">ApiDoc Server</h1>
+				<p>Serving API documentation from <a th:attr="href=${repositoryUrl}" th:text="${repositoryUrl}" href="http://localhost:8080">http://localhost:8080</a><span th:if="${not #lists.isEmpty(groupIdWhitelist)}"> with group id prefix whitelist: <em th:text="${#strings.listJoin(groupIdWhitelist,', ')}">foo, bar, zet</em></span>.
+				</p>
+			</div>
+
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h3 class="panel-title">Usage</h3>
+				</div>
+				<div class="panel-body">
+					<p>
+						Using the <span th:text="${name}">ApiDoc Server</span> is straight forward and very streamlined. The <span th:text="${name}">ApiDoc Server</span> has following URL format specification:
+						<div class="panel panel-default">
+							<div class="panel-body">
+								<tt><span th:text="${baseUrl}">http://localhost:8080</span>/{groupId}/{artifactId}/{version}/{classifier}</tt>
+							</div>
+						</div>
+					</p>
+					<p> The URL parts have following meaning:
+						<ul>
+							<li><tt><b>groupId</b></tt> (mandatory): The group identifier of the artifact, e.g. <tt>org.apache.commons</tt>.</li>
+							<li><tt><b>artifactId</b></tt> (mandatory): The artifact identifier, e.g. <tt>commons-lang3</tt>.</li>
+							<li><tt><b>version</b></tt> (optional): The version identifier of the artifact, e.g. <tt>3.3.2</tt>. In case the version identifier is emitted, all available versions are listed.</li>
+							<li><tt><b>classifier</b></tt> (optional): The documentation classifier to be shown. Typical values are <tt>javadoc</tt>, <tt>scaladoc</tt>, <tt>groovydoc</tt> and so on. If omitted the configurable default value <tt><span th:text="${defaultClassifier}">javadoc</span></tt> is used instead.</li>
+						</ul>
+					</p>
+					<p>
+						The <tt>version</tt> part supports two special version references, which are obtained from the corresponding <tt>maven-metadata.xml</tt>:
+						<ul>
+					   		<li><tt><b>latest</b></tt>: Resolves to the latest version available, this can be a snapshot or a release version.</li>
+					   		<li><tt><b>release</b></tt>: Resolves to the latest release version.</li>
+					   </ul>
+					   Leveraging <tt>latest</tt> or <tt>release</tt> you can create documentation links always pointing to the latest available API documentation.
+					</p>
+				</div>
+			</div>
+
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h3 class="panel-title">Examples</h3>
+				</div>
+				<div class="panel-body">
+					<p>
+						Following examples show how to use the <span th:text="${name}">ApiDoc Server</span>'s features:
+					</p>
+					<ul>
+						<li>
+							Having the group identifier <tt>joda-time</tt>, the artifact identifier <tt>joda-time</tt>, the version <tt>2.7</tt> and the classifier <tt>javadoc</tt> results in a full specified URL for version 2.7 of the joda-time javadoc documentation artifact:
+							<p><a href="/joda-time/joda-time/2.7/javadoc" th:text="${baseUrl} + '/joda-time/joda-time/2.7/javadoc'"></a></p>
+						</li>
+						<li>
+							In case the classifier <tt>javadoc</tt> is omitted, the <span th:text="${name}">ApiDoc Server</span> will use the configured default classifier (which is currently <tt><span th:text="${defaultClassifier}">javadoc</span></tt>):
+							<p><a href="/joda-time/joda-time/2.7" th:text="${baseUrl} + '/joda-time/joda-time/2.7'"></a></p>
+						</li>
+						<li>
+							Instead of specifying a dedicated version like <tt>2.7</tt> it can be directly linked to the latest version available using <tt>latest</tt> as version identifier:
+							<p><a href="/joda-time/joda-time/latest" th:text="${baseUrl} + '/joda-time/joda-time/latest'"></a></p>
+						</li>
+						<li>
+							Using <tt>latest</tt> you'll get the latest available version, which can be a <tt>SNAPSHOT</tt> version as well. To point to the latest release version, <tt>release</tt> can be used as version identifier: 
+							<p><a href="/joda-time/joda-time/release" th:text="${baseUrl} + '/joda-time/joda-time/release'"></a></p>
+						</li>
+						<li>
+							Listing all available versions of an artifact can be achieved by completely omitting the version identifier:
+							<p><a href="/joda-time/joda-time" th:text="${baseUrl} + '/joda-time/joda-time'"></a></p>
+						</li>
+						<li>
+							The previous examples pointed to <tt>javadoc</tt> documentation artifacts only. Finally, a neat example of a <tt>groovydoc</tt> documentation:
+							<a href="/org.codehaus.groovy/groovy/2.4.3/groovydoc" th:text="${baseUrl} + '/org.codehaus.groovy/groovy/2.4.3/groovydoc'"></a>
+						</li>				
+					</ul>
+				</div>
+			</div>
+		</div>
+		<hr/>
+		<p style="text-align:center">ApiDoc Server <span th:text="${applicationVersion}">v0.1.0</span> · <a href="https://github.com/RBMHTechnology/apidoc-server">GitHub</a></p>
+
+	</div>
+	<!-- /.container -->
+
+</body>
+</html>
