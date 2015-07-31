@@ -20,7 +20,7 @@ package com.rbmhtechnology.apidocserver.service;
  */
 public class ArtifactIdentifier {
 
-	private static final String SNAPSHOT_SUFFIX = "-SNAPSHOT";
+	public static final String SNAPSHOT_SUFFIX = "-SNAPSHOT";
 	private final String groupId;
 	private final String artifactId;
 	private final String version;
