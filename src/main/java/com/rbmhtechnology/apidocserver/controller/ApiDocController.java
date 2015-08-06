@@ -1,12 +1,12 @@
 /*
  * Copyright (C) 2015 Red Bull Media House GmbH <http://www.redbullmediahouse.com> - all rights reserved.
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@ package com.rbmhtechnology.apidocserver.controller;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -46,7 +47,9 @@ import com.rbmhtechnology.apidocserver.service.RepositoryService;
 public class ApiDocController {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
- 
+
+	private static final List<String> DEFAULT_INDEX_FILES = Arrays.asList("index.html", "index.htm");
+
 	@Autowired
 	private RepositoryService repositoryService;
 
@@ -60,9 +63,10 @@ public class ApiDocController {
 	}
 
 	private void addBasicAttributes(Model model, HttpServletRequest request) {
-		
-		String baseUrl = request.getScheme() + "://" + (request.getHeader("Host") != null ? request.getHeader("Host") : "localhost");
-				
+
+		String baseUrl = request.getScheme() + "://"
+				+ (request.getHeader("Host") != null ? request.getHeader("Host") : "localhost");
+
 		model.addAttribute("name", repositoryService.getName());
 		model.addAttribute("baseUrl", baseUrl);
 		model.addAttribute("defaultClassifier", repositoryService.getDefaultClassifier());
@@ -75,7 +79,7 @@ public class ApiDocController {
 	String home(Model model, HttpServletRequest request) {
 
 		addBasicAttributes(model, request);
-		
+
 		return "home";
 	}
 
@@ -137,13 +141,14 @@ public class ApiDocController {
 				version,
 				classifier,
 				subPath);
+		if (subPath.endsWith("/")) {}
 		ensureValidGroupId(groupId);
 
 		File jar = repositoryService.retrieveJarFile(groupId, artifactId, version, classifier);
 
 		if (jar == null) {
-			throw new RuntimeException("No documentation artifact file available for group:" + groupId + ", artifact:" + artifactId
-					+ " and version:" + version + "");
+			throw new RuntimeException("No documentation artifact file available for group:" + groupId + ", artifact:"
+					+ artifactId + " and version:" + version + "");
 		}
 		try {
 			serveFileFromJarFile(response, jar, subPath);
@@ -158,6 +163,32 @@ public class ApiDocController {
 		try {
 			jarFile = new JarFile(jar);
 			JarEntry entry = jarFile.getJarEntry(subPath);
+
+			if (entry == null) {
+				response.sendError(404);
+				return;
+			}
+
+			// fallback for requesting a directory without a trailing /
+			// this leads to a jarentry which is not null, and not a directory and of size 0
+			// this shouldn't be
+			if (!entry.isDirectory() && entry.getSize() == 0) {
+				if (!subPath.endsWith("/")) {
+					JarEntry entryWithSlash = jarFile.getJarEntry(subPath + "/");
+					if (entryWithSlash != null && entryWithSlash.isDirectory()) {
+						entry = entryWithSlash;
+					}
+				}
+			}
+
+			if (entry.isDirectory()) {
+				for (String indexFile : DEFAULT_INDEX_FILES) {
+					entry = jarFile.getJarEntry((subPath.endsWith("/") ? subPath : subPath + "/") + indexFile);
+					if (entry != null) {
+						break;
+					}
+				}
+			}
 
 			if (entry == null) {
 				response.sendError(404);
