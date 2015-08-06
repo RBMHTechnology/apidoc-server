@@ -340,6 +340,32 @@ public class RepositoryService {
 				}
 			}
 
+			// did not find a proper version, try to use "snapshot"
+			NodeList snapshotElements = rootElement.getElementsByTagName("snapshot");
+			if (snapshotElements.getLength() == 1) {
+				Node snapshotNode = snapshotElements.item(0);
+
+				NodeList childNodes = snapshotNode.getChildNodes();
+				Node timestampNode = null;
+				Node buildNumberNode = null;
+				for (int childIndex = 0; childIndex < childNodes.getLength(); childIndex++) {
+					Node _node = childNodes.item(childIndex);
+					String nodeName = _node.getNodeName();
+					if ("timestamp".equals(nodeName)) {
+						timestampNode = _node;
+					} else if ("buildNumber".equals(nodeName)) {
+						buildNumberNode = _node;
+					}
+				}
+
+				if (timestampNode != null && buildNumberNode != null) {
+					return artifactIdentifier.getArtifactId() + "-"
+							+ artifactIdentifier.getVersion().replace(ArtifactIdentifier.SNAPSHOT_SUFFIX, "") + "-"
+							+ timestampNode.getTextContent() + "-" + buildNumberNode.getTextContent() + "-"
+							+ artifactIdentifier.getClassifier() + ".jar";
+				}
+			}
+
 		} catch (SAXException | IOException | ParserConfigurationException e) {
 			throw new RepositoryException("Could not parse maven-metadata.xml for '" + artifactIdentifier + "'", e);
 		}
