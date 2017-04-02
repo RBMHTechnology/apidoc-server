@@ -370,7 +370,10 @@ public class RepositoryService {
 			throw new RepositoryException("Could not parse maven-metadata.xml for '" + artifactIdentifier + "'", e);
 		}
 
-		throw new RepositoryException("Could not determine snapshot apidoc file name!");
+		// in case of a snapshot which has no reliable information coming from
+		// maven-metadata.xml simply use the pattern for releases
+		return artifactIdentifier.getArtifactId() + "-" + artifactIdentifier.getVersion() + "-"
+				+ artifactIdentifier.getClassifier() + ".jar";
 	}
 
 	/**
