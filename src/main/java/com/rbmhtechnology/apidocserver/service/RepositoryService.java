@@ -91,10 +91,10 @@ public class RepositoryService {
 
 	@Value("${name:ApiDoc Server}")
 	private String name;
-	
+
 	@Value("${default.classifier:javadoc}")
 	private String defaultClassifier;
-	
+
 	@Value("${repository.url:" + JCENTER + "}")
 	private URL repositoryUrl;
 
@@ -227,8 +227,8 @@ public class RepositoryService {
 		}
 
 		// download
-		String downloadUrl = repositoryUrl + File.separator + groupId.replace(".", File.separator) + File.separator
-				+ artifactId + File.separator + "maven-metadata.xml";
+		String downloadUrl = repositoryUrl + "/" + groupId.replace(".", "/") + "/"
+				+ artifactId + "/" + "maven-metadata.xml";
 
 		download(downloadUrl, mavenMetadataXmlFile);
 		return mavenMetadataXmlFile;
@@ -265,7 +265,7 @@ public class RepositoryService {
 			throw new RepositoryException("Could not parse maven-metadata.xml for groupId: '" + groupId
 					+ "' and artifactId: '" + artifactId + "'", e);
 		}
-		
+
 		// sort list descending, i.e. latest version first
 		Collections.sort(versions, new Comparator<String>(){
 			@Override
@@ -291,10 +291,10 @@ public class RepositoryService {
 		}
 
 		// download
-		String downloadUrl = repositoryUrl + File.separator
-				+ artifactIdentifier.getGroupId().replace(".", File.separator) + File.separator
-				+ artifactIdentifier.getArtifactId() + File.separator + artifactIdentifier.getVersion()
-				+ File.separator + "maven-metadata.xml";
+		String downloadUrl = repositoryUrl + "/"
+				+ artifactIdentifier.getGroupId().replace(".", "/") + "/"
+				+ artifactIdentifier.getArtifactId() + "/" + artifactIdentifier.getVersion()
+				+ "/" + "maven-metadata.xml";
 
 		download(downloadUrl, mavenMetadataXmlFile);
 
@@ -474,11 +474,11 @@ public class RepositoryService {
 	public URL getRepositoryUrl() {
 		return repositoryUrl;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public String getDefaultClassifier() {
 		return defaultClassifier;
 	}
@@ -488,10 +488,10 @@ public class RepositoryService {
 		@Override
 		public String load(ArtifactIdentifier artifactIdentifier) throws Exception {
 			String documentationFilename = getApidocFileNameFromMetadataXML(artifactIdentifier);
-			String downloadUrl = repositoryUrl + File.separator
-					+ artifactIdentifier.getGroupId().replace(".", File.separator) + File.separator
-					+ artifactIdentifier.getArtifactId() + File.separator + artifactIdentifier.getVersion()
-					+ File.separator + documentationFilename;
+			String downloadUrl = repositoryUrl + "/"
+					+ artifactIdentifier.getGroupId().replace(".", "/") + "/"
+					+ artifactIdentifier.getArtifactId() + "/" + artifactIdentifier.getVersion()
+					+ "/" + documentationFilename;
 			LOG.debug("Resolved download url for '{}' to '{}'", artifactIdentifier, downloadUrl);
 			return downloadUrl;
 		}
