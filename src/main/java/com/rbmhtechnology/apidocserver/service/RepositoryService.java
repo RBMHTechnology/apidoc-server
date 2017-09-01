@@ -113,8 +113,8 @@ public class RepositoryService {
 	@Value("${localstorage:#{null}}")
 	private File localJarStorage;
 
-	private LoadingCache<ArtifactIdentifier, String> snapshotDownloadUrlCache;
-	private LoadingCache<ArtifactIdentifier, String> releaseDownloadUrlCache;
+	private LoadingCache<ArtifactIdentifier, File> snapshotDownloadUrlCache;
+	private LoadingCache<ArtifactIdentifier, File> releaseDownloadUrlCache;
 
 	private LoadingCache<GroupArtifactCacheKey, String> latestVersionCache;
 	private LoadingCache<GroupArtifactCacheKey, String> releaseVersionCache;
@@ -138,7 +138,7 @@ public class RepositoryService {
 
 	@PostConstruct
 	void init() {
-		ConstructDocumentationDownloadUrl cacheLoader = new ConstructDocumentationDownloadUrl();
+		ArtifactLoader cacheLoader = new ArtifactLoader();
 		SnapshotRemovalListener removalListener = new SnapshotRemovalListener();
 		// snapshots will expire 30 minutes after their last construction (same for all)
 		snapshotDownloadUrlCache = CacheBuilder.newBuilder()
@@ -432,11 +432,9 @@ public class RepositoryService {
 		LOG.debug("Finished downloading '{}' to '{}'", downloadUrl, file);
 	}
 
-	public void download(ArtifactIdentifier artifactIdentifier, File file) throws RepositoryException {
-		download(constructDownloadUrl(artifactIdentifier), file);
-	}
 
-	private String constructDownloadUrl(ArtifactIdentifier artifactIdentifier) throws RepositoryException {
+
+	private File provideFileForArtifact(ArtifactIdentifier artifactIdentifier) throws RepositoryException {
 		try {
 			if (artifactIdentifier.isSnapshot()) {
 				if (snapshotsEnabled) {
@@ -483,17 +481,32 @@ public class RepositoryService {
 		return defaultClassifier;
 	}
 
-	private final class ConstructDocumentationDownloadUrl extends CacheLoader<ArtifactIdentifier, String> {
+	private final class ArtifactLoader extends CacheLoader<ArtifactIdentifier, File> {
 
 		@Override
-		public String load(ArtifactIdentifier artifactIdentifier) throws Exception {
+		public File load(ArtifactIdentifier artifactIdentifier) throws Exception {
 			String documentationFilename = getApidocFileNameFromMetadataXML(artifactIdentifier);
+
 			String downloadUrl = repositoryUrl + "/"
 					+ artifactIdentifier.getGroupId().replace(".", "/") + "/"
 					+ artifactIdentifier.getArtifactId() + "/" + artifactIdentifier.getVersion()
 					+ "/" + documentationFilename;
+
 			LOG.debug("Resolved download url for '{}' to '{}'", artifactIdentifier, downloadUrl);
-			return downloadUrl;
+
+			File file = constructJarFileLocation(artifactIdentifier);
+			download(downloadUrl, file);
+
+			return file;
+		}
+
+
+		private File constructJarFileLocation(ArtifactIdentifier artifactIdentifier) {
+			File file = new File(new File(new File(new File(localJarStorage, artifactIdentifier.getGroupId()),
+					artifactIdentifier.getArtifactId()), artifactIdentifier.getVersion()),
+					artifactIdentifier.getClassifier() + ".jar");
+			LOG.debug("location for  {}: is {}", artifactIdentifier, file);
+			return file;
 		}
 	}
 
@@ -513,12 +526,21 @@ public class RepositoryService {
 		}
 	}
 
-	private final class SnapshotRemovalListener implements RemovalListener<ArtifactIdentifier, String> {
+	private final class SnapshotRemovalListener implements RemovalListener<ArtifactIdentifier, File> {
 
 		@Override
-		public void onRemoval(RemovalNotification<ArtifactIdentifier, String> notification) {
+		public void onRemoval(RemovalNotification<ArtifactIdentifier, File> notification) {
 			ArtifactIdentifier artifactIdentifier = notification.getKey();
-			removeJarFile(artifactIdentifier);
+			File file = notification.getValue();
+			if (file.exists()) {
+                if (file.delete()) {
+                    LOG.debug("Removed downloaded jar '{}' for '{}'", file, artifactIdentifier);
+                }else{
+                    LOG.warn("Could not remove downloaded jar '{}' for '{}'", file, artifactIdentifier);
+                }
+            }else{
+                LOG.warn("Downloaded jar does not exists, so it cannot be cleaned up '{}' for '{}'", file, artifactIdentifier);
+            }
 		}
 	}
 
@@ -534,32 +556,8 @@ public class RepositoryService {
 	 */
 	public File retrieveJarFile(String groupId, String artifactId, String _version, String classifier) throws RepositoryException {
 		ArtifactIdentifier artifactIdentifier = resolveArtifactIdentfier(groupId, artifactId, _version, classifier);
-		File file = constructJarFileLocation(artifactIdentifier);
-		if (!file.exists()) {
-			download(artifactIdentifier, file);
-		}
-		return file;
-	}
 
-	/**
-	 * Removes a downloaded artifact if existent
-	 *
-	 * @param artifactIdentifier the identifier
-	 */
-	private void removeJarFile(ArtifactIdentifier artifactIdentifier) {
-		File file = constructJarFileLocation(artifactIdentifier);
-		if (file.exists()) {
-			if (file.delete()) {
-				LOG.debug("Removed downloaded jar '{}' for '{}'", file, artifactIdentifier);
-			}
-		}
-	}
-
-	private File constructJarFileLocation(ArtifactIdentifier artifactIdentifier) {
-		File file = new File(new File(new File(new File(localJarStorage, artifactIdentifier.getGroupId()),
-				artifactIdentifier.getArtifactId()), artifactIdentifier.getVersion()),
-				artifactIdentifier.getClassifier() + ".jar");
-		LOG.debug("location for  {}: is {}", artifactIdentifier, file);
+		File file = provideFileForArtifact(artifactIdentifier);
 		return file;
 	}
 
