@@ -26,42 +26,23 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import com.rbmhtechnology.apidocserver.exception.DownloadException;
-import com.rbmhtechnology.apidocserver.exception.NotFoundException;
 import com.rbmhtechnology.apidocserver.exception.RepositoryException;
-import com.rbmhtechnology.apidocserver.exception.StorageException;
 import com.rbmhtechnology.apidocserver.exception.VersionNotFoundException;
-import java.io.BufferedOutputStream;
+import com.rbmhtechnology.apidocserver.service.mavenrepo.MavenRepoClient;
+import com.rbmhtechnology.apidocserver.service.mavenrepo.MavenRepositoryConfig;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import javax.annotation.PreDestroy;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -81,7 +62,7 @@ public class RepositoryService {
    */
   public static final String RELEASE_VERSION_SHORTCUT = "release";
 
-  private static final String JCENTER = "http://jcenter.bintray.com";
+  public static final String JCENTER = "http://jcenter.bintray.com";
 
   private static final Logger LOG = LoggerFactory.getLogger(RepositoryService.class);
 
@@ -90,7 +71,7 @@ public class RepositoryService {
   private final URL repositoryUrl;
   private final boolean snapshotsEnabled;
   private final File localJarStorage;
-  private final CloseableHttpClient httpclient;
+  private final MavenRepoClient mavenClient;
 
   private LoadingCache<ArtifactIdentifier, File> snapshotDownloadUrlCache;
   private LoadingCache<ArtifactIdentifier, File> releaseDownloadUrlCache;
@@ -101,17 +82,16 @@ public class RepositoryService {
   public RepositoryService(
       @Value("${name:ApiDoc Server}") String name,
       @Value("${default.classifier:javadoc}") String defaultClassifier,
-      @Value("${repository.url:" + JCENTER + "}") URL repositoryUrl,
-      @Value("${repository.username:#{null}}") String repositoryUser,
-      @Value("${repository.password:#{null}}") String repositoryPassword,
       @Value("${repository.snapshots.enabled:true}") boolean snapshotsEnabled,
       @Value("${repository.snapshots.cache-timeout:1800}") int cacheTimeoutSeconds,
-      @Value("${localstorage:#{null}}") File localstoragePath) {
+      @Value("${localstorage:#{null}}") File localstoragePath,
+      MavenRepositoryConfig repositoryConfig,
+      MavenRepoClient mavenClient) {
     this.name = name;
     this.defaultClassifier = defaultClassifier;
-    this.repositoryUrl = repositoryUrl;
     this.snapshotsEnabled = snapshotsEnabled;
     this.localJarStorage = localStorageOrTempFile(localstoragePath);
+    this.repositoryUrl = repositoryConfig.repositoryUrl();
 
     this.snapshotDownloadUrlCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
@@ -123,6 +103,7 @@ public class RepositoryService {
         .maximumSize(1000)
         .expireAfterWrite(cacheTimeoutSeconds, SECONDS)
         .build(new MavenXmlVersionRefResolver(LATEST));
+    this.mavenClient = mavenClient;
 
     this.releaseDownloadUrlCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
@@ -131,8 +112,6 @@ public class RepositoryService {
     this.releaseVersionCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .build(new MavenXmlVersionRefResolver(RELEASE));
-
-    this.httpclient = createHttpClient(repositoryUser, repositoryPassword, repositoryUrl);
   }
 
   private File localStorageOrTempFile(@Value("${localstorage:#{null}}") File localJarStorage) {
@@ -142,15 +121,6 @@ public class RepositoryService {
     return Files.createTempDir();
   }
 
-  private CloseableHttpClient createHttpClient(String repositoryUser, String repositoryPassword,
-      URL repositoryUrl) {
-    final CredentialsProvider credsProvider = new BasicCredentialsProvider();
-    if (!StringUtils.isEmpty(repositoryUser) && !StringUtils.isEmpty(repositoryPassword)) {
-      credsProvider.setCredentials(new AuthScope(repositoryUrl.getHost(), repositoryUrl.getPort()),
-          new UsernamePasswordCredentials(repositoryUser, repositoryPassword));
-    }
-    return HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build();
-  }
 
   public enum MavenVersionRef {
     LATEST("latest"), RELEASE("release");
@@ -163,17 +133,6 @@ public class RepositoryService {
 
     public String getXmlElementName() {
       return xmlElementName;
-    }
-
-  }
-  @PreDestroy
-  void destroy() {
-    if (httpclient != null) {
-      try {
-        httpclient.close();
-      } catch (IOException e) {
-        LOG.warn("Error closing httpclient on destroy", e);
-      }
     }
   }
 
@@ -232,7 +191,7 @@ public class RepositoryService {
     String downloadUrl = repositoryUrl + "/" + groupId.replace(".", "/") + "/"
         + artifactId + "/" + "maven-metadata.xml";
 
-    download(downloadUrl, mavenMetadataXmlFile);
+    mavenClient.download(downloadUrl, mavenMetadataXmlFile);
     return mavenMetadataXmlFile;
   }
 
@@ -296,7 +255,7 @@ public class RepositoryService {
         + artifactIdentifier.getArtifactId() + "/" + artifactIdentifier.getVersion()
         + "/" + "maven-metadata.xml";
 
-    download(downloadUrl, mavenMetadataXmlFile);
+    mavenClient.download(downloadUrl, mavenMetadataXmlFile);
 
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
@@ -407,34 +366,6 @@ public class RepositoryService {
     return new ArtifactIdentifier(groupId, artifactId, version, classifier);
   }
 
-  private void download(String downloadUrl, File file) throws RepositoryException {
-    LOG.debug("Started downloading '{}' to '{}'", downloadUrl, file);
-
-    // executing HTTP get
-    try (CloseableHttpResponse response = httpclient.execute(new HttpGet(downloadUrl))) {
-      // checking status
-      StatusLine statusLine = response.getStatusLine();
-      switch (statusLine.getStatusCode()) {
-        case HttpStatus.SC_OK:
-          storeResponseIntoFile(response, file);
-          break;
-
-        case HttpStatus.SC_NOT_FOUND:
-          throw new NotFoundException(
-              "No jar at '" + downloadUrl + "', failed with status:" + statusLine);
-        case HttpStatus.SC_UNAUTHORIZED:
-          throw new DownloadException("Access denied for " + downloadUrl + "', failed with status:"
-              + statusLine);
-        default:
-          throw new DownloadException(
-              "Downloading '" + downloadUrl + "' failed with status: " + statusLine);
-      }
-    } catch (IOException e) {
-      throw new DownloadException("Error downloading '" + downloadUrl + "' failed", e);
-    }
-
-    LOG.debug("Finished downloading '{}' to '{}'", downloadUrl, file);
-  }
 
 
   private File provideFileForArtifact(ArtifactIdentifier artifactIdentifier)
@@ -454,26 +385,6 @@ public class RepositoryService {
     }
   }
 
-  private void storeResponseIntoFile(CloseableHttpResponse response, File file)
-      throws RepositoryException {
-    // create parent directory for downloaded artifact jar
-    File parentDirectory = file.getParentFile();
-    if (!parentDirectory.exists()) {
-      if (!parentDirectory.mkdirs()) {
-        throw new StorageException(
-            "Could not create parent directory '" + parentDirectory.getAbsolutePath()
-                + "'");
-      }
-    }
-    HttpEntity entity = response.getEntity();
-
-    try (InputStream in = entity.getContent();
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
-      ByteStreams.copy(in, out);
-    } catch (IllegalStateException | IOException e) {
-      throw new StorageException("Error storing ", e);
-    }
-  }
 
   public URL getRepositoryUrl() {
     return repositoryUrl;
@@ -501,7 +412,7 @@ public class RepositoryService {
       LOG.debug("Resolved download url for '{}' to '{}'", artifactIdentifier, downloadUrl);
 
       File file = constructJarFileLocation(artifactIdentifier);
-      download(downloadUrl, file);
+      mavenClient.download(downloadUrl, file);
 
       return file;
     }
