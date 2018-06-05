@@ -15,8 +15,10 @@
  */
 package com.rbmhtechnology.apidocserver.service;
 
+import static com.rbmhtechnology.apidocserver.service.RepositoryService.MavenVersionRef.LATEST;
 import static com.rbmhtechnology.apidocserver.service.RepositoryService.MavenVersionRef.RELEASE;
 import static java.util.Comparator.reverseOrder;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -40,8 +42,6 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -85,29 +85,12 @@ public class RepositoryService {
 
   private static final Logger LOG = LoggerFactory.getLogger(RepositoryService.class);
 
-  @Value("${name:ApiDoc Server}")
-  private String name;
-
-  @Value("${default.classifier:javadoc}")
-  private String defaultClassifier;
-
-  @Value("${repository.url:" + JCENTER + "}")
-  private URL repositoryUrl;
-
-  @Value("${repository.username:#{null}}")
-  private String repositoryUser;
-
-  @Value("${repository.password:#{null}}")
-  private String repositoryPassword;
-
-  @Value("${repository.snapshots.enabled:true}")
-  private boolean snapshotsEnabled;
-
-  @Value("${repository.snapshots.cache-timeout:1800}")
-  private int snapshotsCacheTimeoutSeconds;
-
-  @Value("${localstorage:#{null}}")
-  private File localJarStorage;
+  private final String name;
+  private final String defaultClassifier;
+  private final URL repositoryUrl;
+  private final boolean snapshotsEnabled;
+  private final File localJarStorage;
+  private final CloseableHttpClient httpclient;
 
   private LoadingCache<ArtifactIdentifier, File> snapshotDownloadUrlCache;
   private LoadingCache<ArtifactIdentifier, File> releaseDownloadUrlCache;
@@ -115,7 +98,59 @@ public class RepositoryService {
   private LoadingCache<GroupArtifactCacheKey, String> latestVersionCache;
   private LoadingCache<GroupArtifactCacheKey, String> releaseVersionCache;
 
-  private CloseableHttpClient httpclient;
+  public RepositoryService(
+      @Value("${name:ApiDoc Server}") String name,
+      @Value("${default.classifier:javadoc}") String defaultClassifier,
+      @Value("${repository.url:" + JCENTER + "}") URL repositoryUrl,
+      @Value("${repository.username:#{null}}") String repositoryUser,
+      @Value("${repository.password:#{null}}") String repositoryPassword,
+      @Value("${repository.snapshots.enabled:true}") boolean snapshotsEnabled,
+      @Value("${repository.snapshots.cache-timeout:1800}") int cacheTimeoutSeconds,
+      @Value("${localstorage:#{null}}") File localstoragePath) {
+    this.name = name;
+    this.defaultClassifier = defaultClassifier;
+    this.repositoryUrl = repositoryUrl;
+    this.snapshotsEnabled = snapshotsEnabled;
+    this.localJarStorage = localStorageOrTempFile(localstoragePath);
+
+    this.snapshotDownloadUrlCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(cacheTimeoutSeconds, SECONDS)
+        .removalListener(new SnapshotRemovalListener())
+        .build(new ArtifactLoader());
+
+    this.latestVersionCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(cacheTimeoutSeconds, SECONDS)
+        .build(new MavenXmlVersionRefResolver(LATEST));
+
+    this.releaseDownloadUrlCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .build(new ArtifactLoader());
+
+    this.releaseVersionCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .build(new MavenXmlVersionRefResolver(RELEASE));
+
+    this.httpclient = createHttpClient(repositoryUser, repositoryPassword, repositoryUrl);
+  }
+
+  private File localStorageOrTempFile(@Value("${localstorage:#{null}}") File localJarStorage) {
+    if (localJarStorage != null) {
+      return localJarStorage;
+    }
+    return Files.createTempDir();
+  }
+
+  private CloseableHttpClient createHttpClient(String repositoryUser, String repositoryPassword,
+      URL repositoryUrl) {
+    final CredentialsProvider credsProvider = new BasicCredentialsProvider();
+    if (!StringUtils.isEmpty(repositoryUser) && !StringUtils.isEmpty(repositoryPassword)) {
+      credsProvider.setCredentials(new AuthScope(repositoryUrl.getHost(), repositoryUrl.getPort()),
+          new UsernamePasswordCredentials(repositoryUser, repositoryPassword));
+    }
+    return HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build();
+  }
 
   public enum MavenVersionRef {
     LATEST("latest"), RELEASE("release");
@@ -131,40 +166,6 @@ public class RepositoryService {
     }
 
   }
-
-  @PostConstruct
-  void init() {
-    ArtifactLoader cacheLoader = new ArtifactLoader();
-    SnapshotRemovalListener removalListener = new SnapshotRemovalListener();
-    // snapshots will expire 30 minutes after their last construction (same for all)
-    snapshotDownloadUrlCache = CacheBuilder.newBuilder()
-        .maximumSize(1000)
-        .expireAfterWrite(snapshotsCacheTimeoutSeconds, TimeUnit.SECONDS)
-        .removalListener(removalListener)
-        .build(cacheLoader);
-    latestVersionCache = CacheBuilder.newBuilder()
-        .maximumSize(1000)
-        .expireAfterWrite(snapshotsCacheTimeoutSeconds, TimeUnit.SECONDS)
-        .build(new MavenXmlVersionRefResolver(MavenVersionRef.LATEST));
-
-    releaseDownloadUrlCache = CacheBuilder.newBuilder().maximumSize(1000).build(cacheLoader);
-    releaseVersionCache = CacheBuilder.newBuilder()
-        .maximumSize(1000)
-        .build(new MavenXmlVersionRefResolver(RELEASE));
-
-    if (localJarStorage == null) {
-      localJarStorage = Files.createTempDir();
-    }
-
-    // http client
-    CredentialsProvider credsProvider = new BasicCredentialsProvider();
-    if (!StringUtils.isEmpty(repositoryUser) && !StringUtils.isEmpty(repositoryPassword)) {
-      credsProvider.setCredentials(new AuthScope(repositoryUrl.getHost(), repositoryUrl.getPort()),
-          new UsernamePasswordCredentials(repositoryUser, repositoryPassword));
-    }
-    httpclient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build();
-  }
-
   @PreDestroy
   void destroy() {
     if (httpclient != null) {
