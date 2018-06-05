@@ -122,7 +122,7 @@ public class RepositoryService {
 
     String xmlElementName;
 
-    private MavenVersionRef(String xmlElementName) {
+    MavenVersionRef(String xmlElementName) {
       this.xmlElementName = xmlElementName;
     }
 
