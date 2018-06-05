@@ -18,6 +18,7 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-actuator"
     compile "org.springframework.boot:spring-boot-devtools"
     compile "org.apache.httpcomponents:httpclient"
+    compile "io.vavr:vavr:0.9.2"
     compile "com.google.guava:guava:${guavaVersion}"
 
     testCompile "org.springframework.boot:spring-boot-starter-test"
