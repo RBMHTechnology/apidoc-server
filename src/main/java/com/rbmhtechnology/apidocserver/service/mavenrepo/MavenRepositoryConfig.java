@@ -1,7 +1,5 @@
 package com.rbmhtechnology.apidocserver.service.mavenrepo;
 
-import static com.rbmhtechnology.apidocserver.service.RepositoryService.JCENTER;
-
 import io.vavr.control.Option;
 import java.net.URL;
 import java.util.Objects;
@@ -11,6 +9,8 @@ import org.springframework.util.Assert;
 
 @Component
 public class MavenRepositoryConfig {
+
+  private static final String JCENTER = "http://jcenter.bintray.com";
 
   private final URL repositoryUrl;
   private final Option<Credentials> credentials;

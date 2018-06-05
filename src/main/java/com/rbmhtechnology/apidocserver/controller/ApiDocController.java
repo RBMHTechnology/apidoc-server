@@ -20,9 +20,11 @@ import com.rbmhtechnology.apidocserver.exception.AccessNotAllowedException;
 import com.rbmhtechnology.apidocserver.exception.RepositoryException;
 import com.rbmhtechnology.apidocserver.service.GroupIdWhitelistService;
 import com.rbmhtechnology.apidocserver.service.RepositoryService;
+import com.rbmhtechnology.apidocserver.service.mavenrepo.MavenRepositoryConfig;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarEntry;
@@ -47,11 +49,18 @@ public class ApiDocController {
 
   private static final List<String> DEFAULT_INDEX_FILES = Arrays.asList("index.html", "index.htm");
 
-  @Autowired
-  private RepositoryService repositoryService;
+  private final RepositoryService repositoryService;
+  private final GroupIdWhitelistService groupIdWhitelistService;
+  private final URL repositoryUrl;
 
   @Autowired
-  private GroupIdWhitelistService groupIdWhitelistService;
+  public ApiDocController(RepositoryService repositoryService,
+          GroupIdWhitelistService groupIdWhitelistService,
+          MavenRepositoryConfig mavenConfig) {
+    this.repositoryService = repositoryService;
+    this.groupIdWhitelistService = groupIdWhitelistService;
+    this. repositoryUrl = mavenConfig.repositoryUrl();
+  }
 
   private void ensureValidGroupId(String groupId) throws AccessNotAllowedException {
     if (!groupIdWhitelistService.isValidGroupId(groupId)) {
@@ -68,7 +77,7 @@ public class ApiDocController {
     model.addAttribute("baseUrl", baseUrl);
     model.addAttribute("defaultClassifier", repositoryService.getDefaultClassifier());
     model.addAttribute("applicationVersion", getApplicationVersion());
-    model.addAttribute("repositoryUrl", repositoryService.getRepositoryUrl());
+    model.addAttribute("repositoryUrl", repositoryUrl);
     model.addAttribute("groupIdWhitelist", groupIdWhitelistService.getGroupIdPrefixWhitelist());
   }
 
