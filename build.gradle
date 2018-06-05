@@ -13,14 +13,14 @@ repositories {
 ext['assertj.version'] = '3.10.0'
 
 dependencies {
-	compile "org.springframework.boot:spring-boot-starter-web"
-	compile "org.springframework.boot:spring-boot-starter-thymeleaf"
-	compile "org.springframework.boot:spring-boot-starter-actuator"
-	compile "org.springframework.boot:spring-boot-devtools"
-	compile "org.apache.httpcomponents:httpclient"
-	compile "com.google.guava:guava:${guavaVersion}"
+    compile "org.springframework.boot:spring-boot-starter-web"
+    compile "org.springframework.boot:spring-boot-starter-thymeleaf"
+    compile "org.springframework.boot:spring-boot-starter-actuator"
+    compile "org.springframework.boot:spring-boot-devtools"
+    compile "org.apache.httpcomponents:httpclient"
+    compile "com.google.guava:guava:${guavaVersion}"
 
-	testCompile "org.springframework.boot:spring-boot-starter-test"
+    testCompile "org.springframework.boot:spring-boot-starter-test"
 }
 
 
