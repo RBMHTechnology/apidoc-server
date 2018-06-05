@@ -1,23 +1,7 @@
-// build.gradle
-
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-
-// --------------------------------------------------------------------------------------
-// Spring Boot Gradle Plugin
-
-buildscript {
-    repositories {
-        jcenter()
-    }
-
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
-    }
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '1.5.13.RELEASE'
 }
-
-apply plugin: 'spring-boot'
 
 // --------------------------------------------------------------------------------------
 // Project Configuration
@@ -27,32 +11,22 @@ apply plugin: 'spring-boot'
 sourceCompatibility = javaVersion
 targetCompatibility = javaVersion
 
-eclipse {
-    classpath {
-        containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
-        containers "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-$javaVersion"
-    }
-}
-
-
 repositories {
     jcenter()
 }
 
 dependencies {
-    compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
-    compile "org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}"
-    compile "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
-    compile "org.apache.httpcomponents:httpclient:$httpClientVersion"
-    compile "com.google.guava:guava:$guavaVersion"
+	compile "org.springframework.boot:spring-boot-starter-web"
+	compile "org.springframework.boot:spring-boot-starter-thymeleaf"
+	compile "org.springframework.boot:spring-boot-starter-actuator"
+	compile "org.springframework.boot:spring-boot-devtools"
+	compile "org.apache.httpcomponents:httpclient"
+	compile "com.google.guava:guava:${guavaVersion}"
 }
 
 // --------------------------------------------------------------------------------------
 // Gradle Tasks
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.3'
-}
 
 task sourcesJar(type: Jar, dependsOn: classes, description: 'Builds a sources jar artifact suitable for maven deployment.') {
     classifier = 'sources'
@@ -84,8 +58,5 @@ bootRun {
         systemProperty 'spring.config.location', "file:${applicationProperties}"
     }
 }
-run {
-    if (project.hasProperty('applicationProperties')) {
-        systemProperty 'spring.config.location', "file:${applicationProperties}"
-    }
-}
+
+wrapper.gradleVersion = '4.8.1'
