@@ -13,22 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.rbmhtechnology.apidocserver;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.support.SpringBootServletInitializer;
+import org.springframework.core.env.Environment;
 
 @SpringBootApplication
-public class ApiDocServer extends SpringBootServletInitializer {
+public class ApiDocServer {
 
-  public static void main(String[] args) {
-    SpringApplication.run(ApiDocServer.class, args);
-  }
+  private static final Logger LOG = LoggerFactory.getLogger(ApiDocServer.class);
 
-  @Override
-  protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-    return application.sources(ApiDocServer.class);
+  public static void main(String[] args) throws UnknownHostException {
+    final SpringApplication app = new SpringApplication(ApiDocServer.class);
+    final Environment env = app.run(args).getEnvironment();
+    final String hostAddress = InetAddress.getLocalHost().getHostAddress();
+    final String serverPort = env.getProperty("server.port", "8080");
+    LOG.info(
+        "Application URLs:\n----------------------------------------------------------\n\t"
+            + "Local: \t\thttp://127.0.0.1:{}\n\t"
+            + "External: \thttp://{}:{}\n----------------------------------------------------------",
+        serverPort,
+        hostAddress,
+        serverPort);
+
+    final String managementPort = env.getProperty("management.port", "8080");
+    LOG.info(
+        "Management URLs:\n----------------------------------------------------------\n\t"
+            + "Local: \t\thttp://127.0.0.1:{}/health\n\t"
+            + "External: \thttp://{}:{}/health\n----------------------------------------------------------",
+        managementPort,
+        hostAddress,
+        managementPort);
   }
 }
