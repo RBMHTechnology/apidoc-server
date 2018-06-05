@@ -15,11 +15,6 @@
  */
 package com.rbmhtechnology.apidocserver.service;
 
-import static com.rbmhtechnology.apidocserver.service.RepositoryService.MavenVersionRef.LATEST;
-import static com.rbmhtechnology.apidocserver.service.RepositoryService.MavenVersionRef.RELEASE;
-import static java.util.Comparator.reverseOrder;
-import static java.util.concurrent.TimeUnit.SECONDS;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -31,14 +26,6 @@ import com.rbmhtechnology.apidocserver.exception.RepositoryException;
 import com.rbmhtechnology.apidocserver.exception.VersionNotFoundException;
 import com.rbmhtechnology.apidocserver.service.mavenrepo.MavenRepoClient;
 import com.rbmhtechnology.apidocserver.service.mavenrepo.MavenRepositoryConfig;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +35,20 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import static com.rbmhtechnology.apidocserver.service.RepositoryService.MavenVersionRef.LATEST;
+import static com.rbmhtechnology.apidocserver.service.RepositoryService.MavenVersionRef.RELEASE;
+import static java.util.Comparator.reverseOrder;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Service
 public class RepositoryService {
@@ -188,10 +189,10 @@ public class RepositoryService {
     }
 
     // download
-    String downloadUrl = repositoryUrl + "/" + groupId.replace(".", "/") + "/"
+    String downloadUrl = groupId.replace(".", "/") + "/"
         + artifactId + "/" + "maven-metadata.xml";
 
-    mavenClient.download(downloadUrl, mavenMetadataXmlFile);
+    mavenClient.get(downloadUrl, mavenMetadataXmlFile);
     return mavenMetadataXmlFile;
   }
 
@@ -250,12 +251,11 @@ public class RepositoryService {
     }
 
     // download
-    String downloadUrl = repositoryUrl + "/"
-        + artifactIdentifier.getGroupId().replace(".", "/") + "/"
+    String downloadUrl = artifactIdentifier.getGroupId().replace(".", "/") + "/"
         + artifactIdentifier.getArtifactId() + "/" + artifactIdentifier.getVersion()
         + "/" + "maven-metadata.xml";
 
-    mavenClient.download(downloadUrl, mavenMetadataXmlFile);
+    mavenClient.get(downloadUrl, mavenMetadataXmlFile);
 
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
@@ -366,8 +366,6 @@ public class RepositoryService {
     return new ArtifactIdentifier(groupId, artifactId, version, classifier);
   }
 
-
-
   private File provideFileForArtifact(ArtifactIdentifier artifactIdentifier)
       throws RepositoryException {
     try {
@@ -404,15 +402,15 @@ public class RepositoryService {
     public File load(ArtifactIdentifier artifactIdentifier) throws Exception {
       String documentationFilename = getApidocFileNameFromMetadataXML(artifactIdentifier);
 
-      String downloadUrl = repositoryUrl + "/"
-          + artifactIdentifier.getGroupId().replace(".", "/") + "/"
+      String downloadUrl = artifactIdentifier.getGroupId().replace(".", "/") + "/"
           + artifactIdentifier.getArtifactId() + "/" + artifactIdentifier.getVersion()
           + "/" + documentationFilename;
 
       LOG.debug("Resolved download url for '{}' to '{}'", artifactIdentifier, downloadUrl);
 
       File file = constructJarFileLocation(artifactIdentifier);
-      mavenClient.download(downloadUrl, file);
+
+      mavenClient.get(downloadUrl, file);
 
       return file;
     }
