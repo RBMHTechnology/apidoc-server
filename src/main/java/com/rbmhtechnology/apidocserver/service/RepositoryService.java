@@ -571,8 +571,7 @@ public class RepositoryService {
     ArtifactIdentifier artifactIdentifier = resolveArtifactIdentfier(groupId, artifactId, _version,
         classifier);
 
-    File file = provideFileForArtifact(artifactIdentifier);
-    return file;
+    return provideFileForArtifact(artifactIdentifier);
   }
 
 }
