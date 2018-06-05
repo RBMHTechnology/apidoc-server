@@ -8,9 +8,9 @@ apply plugin: 'eclipse'
 // Spring Boot Gradle Plugin
 
 buildscript {
-	repositories {
-		jcenter()
-	}
+    repositories {
+        jcenter()
+    }
 
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
@@ -28,64 +28,64 @@ sourceCompatibility = javaVersion
 targetCompatibility = javaVersion
 
 eclipse {
-	classpath {
-		containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
-		containers "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-$javaVersion"
-	}
+    classpath {
+        containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
+        containers "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-$javaVersion"
+    }
 }
 
 
 repositories {
-	jcenter()
+    jcenter()
 }
 
 dependencies {
-	compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
-	compile "org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}"
-	compile "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
-	compile "org.apache.httpcomponents:httpclient:$httpClientVersion"
-	compile "com.google.guava:guava:$guavaVersion"
+    compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+    compile "org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}"
+    compile "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
+    compile "org.apache.httpcomponents:httpclient:$httpClientVersion"
+    compile "com.google.guava:guava:$guavaVersion"
 }
 
 // --------------------------------------------------------------------------------------
 // Gradle Tasks
 
 task wrapper(type: Wrapper) {
-	gradleVersion = '2.3'
+    gradleVersion = '2.3'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes, description: 'Builds a sources jar artifact suitable for maven deployment.') {
-	classifier = 'sources'
-	from sourceSets.main.allSource
+    classifier = 'sources'
+    from sourceSets.main.allSource
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc, description: 'Builds a javadoc jar artifact suitable for maven deployment.') {
-	classifier = 'javadoc'
-	from javadoc.destinationDir
+    classifier = 'javadoc'
+    from javadoc.destinationDir
 }
 
 task testJar(type: Jar, dependsOn: testClasses, description: 'Builds a tests jar artifact suitable for maven deployment.') {
-	classifier = 'tests'
-	from sourceSets.test.output
+    classifier = 'tests'
+    from sourceSets.test.output
 }
 
 // customizing the Manifest
 tasks.withType(Jar) {
-	manifest {
-		attributes 'Implementation-Title': project.name
-		attributes 'Implementation-Version': project.version
-		attributes 'Implementation-Vendor': "Red Bull Media House GmbH"
-		attributes 'Build-Date': new Date().format("yyyy-MM-dd HH:mm:ss")
-	}
+    manifest {
+        attributes 'Implementation-Title': project.name
+        attributes 'Implementation-Version': project.version
+        attributes 'Implementation-Vendor': "Red Bull Media House GmbH"
+        attributes 'Build-Date': new Date().format("yyyy-MM-dd HH:mm:ss")
+    }
 }
 
-bootRun{
-	if (project.hasProperty('applicationProperties')){
-		systemProperty 'spring.config.location', "file:${applicationProperties}"
-	}
+bootRun {
+    if (project.hasProperty('applicationProperties')) {
+        systemProperty 'spring.config.location', "file:${applicationProperties}"
+    }
 }
-run{
-	if (project.hasProperty('applicationProperties')){
-		systemProperty 'spring.config.location', "file:${applicationProperties}"
-	}
+run {
+    if (project.hasProperty('applicationProperties')) {
+        systemProperty 'spring.config.location', "file:${applicationProperties}"
+    }
 }

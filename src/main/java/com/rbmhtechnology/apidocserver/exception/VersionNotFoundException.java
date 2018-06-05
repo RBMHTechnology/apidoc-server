@@ -7,13 +7,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  */
 @ResponseStatus(org.springframework.http.HttpStatus.NOT_FOUND)
 public class VersionNotFoundException extends RepositoryException {
-	private static final long serialVersionUID = 1L;
 
-	public VersionNotFoundException(String message) {
-		super(message);
-	}
+  private static final long serialVersionUID = 1L;
 
-	public VersionNotFoundException(String message, Throwable cause) {
-		super(message, cause);
-	}
+  public VersionNotFoundException(String message) {
+    super(message);
+  }
+
+  public VersionNotFoundException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }
