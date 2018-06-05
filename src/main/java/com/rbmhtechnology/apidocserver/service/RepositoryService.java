@@ -412,7 +412,7 @@ public class RepositoryService {
     LOG.debug("Started downloading '{}' to '{}'", downloadUrl, file);
 
     // executing HTTP get
-    try (CloseableHttpResponse response = httpclient.execute(new HttpGet(downloadUrl));) {
+    try (CloseableHttpResponse response = httpclient.execute(new HttpGet(downloadUrl))) {
       // checking status
       StatusLine statusLine = response.getStatusLine();
       switch (statusLine.getStatusCode()) {
