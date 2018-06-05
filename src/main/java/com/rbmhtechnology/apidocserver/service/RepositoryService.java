@@ -180,7 +180,7 @@ public class RepositoryService {
   private String getVersionRefFromMetadataXML(String groupId, String artifactId,
       MavenVersionRef versionRef) throws RepositoryException {
     LOG.info("getVersionRefFromMetadataXML('{}','{}','{}')", groupId, artifactId, versionRef);
-    String version = null;
+    String version;
 
     File mavenMetadataXmlFile = downloadMavenMetadataXml(groupId, artifactId);
 
@@ -271,12 +271,7 @@ public class RepositoryService {
     }
 
     // sort list descending, i.e. latest version first
-    Collections.sort(versions, new Comparator<String>() {
-      @Override
-      public int compare(String o1, String o2) {
-        return o2.compareTo(o1);
-      }
-    });
+    versions.sort((o1, o2) -> o2.compareTo(o1));
 
     return versions;
   }

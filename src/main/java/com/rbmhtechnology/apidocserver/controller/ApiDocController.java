@@ -140,8 +140,6 @@ public class ApiDocController {
         version,
         classifier,
         subPath);
-    if (subPath.endsWith("/")) {
-    }
     ensureValidGroupId(groupId);
 
     File jar = repositoryService.retrieveJarFile(groupId, artifactId, version, classifier);
@@ -162,9 +160,7 @@ public class ApiDocController {
 
   private void serveFileFromJarFile(HttpServletResponse response, File jar, String subPath)
       throws IOException {
-    JarFile jarFile = null;
-    try {
-      jarFile = new JarFile(jar);
+    try (JarFile jarFile = new JarFile(jar)) {
       JarEntry entry = jarFile.getJarEntry(subPath);
 
       if (entry == null) {
@@ -202,15 +198,8 @@ public class ApiDocController {
       response.setContentLength((int) entry.getSize());
       String mimetype = getMimeType(entry.getName());
       response.setContentType(mimetype);
-      InputStream input = jarFile.getInputStream(entry);
-      try {
+      try (InputStream input = jarFile.getInputStream(entry)) {
         ByteStreams.copy(input, response.getOutputStream());
-      } finally {
-        input.close();
-      }
-    } finally {
-      if (jarFile != null) {
-        jarFile.close();
       }
     }
   }
