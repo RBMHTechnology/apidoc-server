@@ -16,6 +16,7 @@
 package com.rbmhtechnology.apidocserver.service;
 
 import static com.rbmhtechnology.apidocserver.service.RepositoryService.MavenVersionRef.RELEASE;
+import static java.util.Comparator.reverseOrder;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -37,8 +38,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -270,8 +269,7 @@ public class RepositoryService {
           + "' and artifactId: '" + artifactId + "'", e);
     }
 
-    // sort list descending, i.e. latest version first
-    versions.sort((o1, o2) -> o2.compareTo(o1));
+    versions.sort(reverseOrder());
 
     return versions;
   }
