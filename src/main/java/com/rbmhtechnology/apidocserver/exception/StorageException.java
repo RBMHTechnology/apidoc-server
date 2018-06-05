@@ -5,13 +5,13 @@ package com.rbmhtechnology.apidocserver.exception;
  */
 public class StorageException extends RepositoryException {
 
-	private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-	public StorageException(String message) {
-		super(message);
-	}
+  public StorageException(String message) {
+    super(message);
+  }
 
-	public StorageException(String message, Throwable cause) {
-		super(message, cause);
-	}
+  public StorageException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }
