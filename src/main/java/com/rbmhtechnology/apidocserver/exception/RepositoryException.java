@@ -5,14 +5,14 @@ package com.rbmhtechnology.apidocserver.exception;
  */
 public class RepositoryException extends Exception {
 
-	private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-	public RepositoryException(String message) {
-		super(message);
-	}
+  public RepositoryException(String message) {
+    super(message);
+  }
 
-	public RepositoryException(String message, Throwable cause) {
-		super(message, cause);
-	}
+  public RepositoryException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
 }

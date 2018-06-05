@@ -5,13 +5,13 @@ package com.rbmhtechnology.apidocserver.exception;
  */
 public class DownloadException extends RepositoryException {
 
-	private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-	public DownloadException(String message) {
-		super(message);
-	}
+  public DownloadException(String message) {
+    super(message);
+  }
 
-	public DownloadException(String message, Throwable cause) {
-		super(message, cause);
-	}
+  public DownloadException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }
