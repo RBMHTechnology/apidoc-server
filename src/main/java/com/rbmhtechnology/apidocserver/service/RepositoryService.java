@@ -542,7 +542,7 @@ public class RepositoryService {
     public void onRemoval(RemovalNotification<ArtifactIdentifier, File> notification) {
       ArtifactIdentifier artifactIdentifier = notification.getKey();
       File file = notification.getValue();
-      if (file.exists()) {
+      if (file != null && file.exists()) {
         if (file.delete()) {
           LOG.debug("Removed downloaded jar '{}' for '{}'", file, artifactIdentifier);
         } else {
