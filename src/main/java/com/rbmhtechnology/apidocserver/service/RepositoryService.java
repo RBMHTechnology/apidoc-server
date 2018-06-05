@@ -15,6 +15,11 @@
  */
 package com.rbmhtechnology.apidocserver.service;
 
+import static com.rbmhtechnology.apidocserver.service.RepositoryService.MavenVersionRef.LATEST;
+import static com.rbmhtechnology.apidocserver.service.RepositoryService.MavenVersionRef.RELEASE;
+import static java.util.Comparator.reverseOrder;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -25,7 +30,13 @@ import com.google.common.io.Files;
 import com.rbmhtechnology.apidocserver.exception.RepositoryException;
 import com.rbmhtechnology.apidocserver.exception.VersionNotFoundException;
 import com.rbmhtechnology.apidocserver.service.mavenrepo.MavenRepoClient;
-import com.rbmhtechnology.apidocserver.service.mavenrepo.MavenRepositoryConfig;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,20 +46,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import static com.rbmhtechnology.apidocserver.service.RepositoryService.MavenVersionRef.LATEST;
-import static com.rbmhtechnology.apidocserver.service.RepositoryService.MavenVersionRef.RELEASE;
-import static java.util.Comparator.reverseOrder;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Service
 public class RepositoryService {
@@ -63,13 +60,10 @@ public class RepositoryService {
    */
   public static final String RELEASE_VERSION_SHORTCUT = "release";
 
-  public static final String JCENTER = "http://jcenter.bintray.com";
-
   private static final Logger LOG = LoggerFactory.getLogger(RepositoryService.class);
 
   private final String name;
   private final String defaultClassifier;
-  private final URL repositoryUrl;
   private final boolean snapshotsEnabled;
   private final File localJarStorage;
   private final MavenRepoClient mavenClient;
@@ -86,13 +80,11 @@ public class RepositoryService {
       @Value("${repository.snapshots.enabled:true}") boolean snapshotsEnabled,
       @Value("${repository.snapshots.cache-timeout:1800}") int cacheTimeoutSeconds,
       @Value("${localstorage:#{null}}") File localstoragePath,
-      MavenRepositoryConfig repositoryConfig,
       MavenRepoClient mavenClient) {
     this.name = name;
     this.defaultClassifier = defaultClassifier;
     this.snapshotsEnabled = snapshotsEnabled;
     this.localJarStorage = localStorageOrTempFile(localstoragePath);
-    this.repositoryUrl = repositoryConfig.repositoryUrl();
 
     this.snapshotDownloadUrlCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
@@ -381,11 +373,6 @@ public class RepositoryService {
     } catch (ExecutionException e) {
       throw new RepositoryException("Could not construct download url", e);
     }
-  }
-
-
-  public URL getRepositoryUrl() {
-    return repositoryUrl;
   }
 
   public String getName() {
