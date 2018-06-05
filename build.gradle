@@ -3,11 +3,6 @@ plugins {
     id 'org.springframework.boot' version '1.5.13.RELEASE'
 }
 
-// --------------------------------------------------------------------------------------
-// Project Configuration
-
-// Java Settings
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 sourceCompatibility = javaVersion
 targetCompatibility = javaVersion
 
@@ -28,9 +23,6 @@ dependencies {
 	testCompile "org.springframework.boot:spring-boot-starter-test"
 }
 
-// --------------------------------------------------------------------------------------
-// Gradle Tasks
-
 
 task sourcesJar(type: Jar, dependsOn: classes, description: 'Builds a sources jar artifact suitable for maven deployment.') {
     classifier = 'sources'
@@ -47,7 +39,6 @@ task testJar(type: Jar, dependsOn: testClasses, description: 'Builds a tests jar
     from sourceSets.test.output
 }
 
-// customizing the Manifest
 tasks.withType(Jar) {
     manifest {
         attributes 'Implementation-Title': project.name
