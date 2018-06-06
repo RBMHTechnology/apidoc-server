@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 public class ApiDocController {
 
-  private Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger LOG = LoggerFactory.getLogger(ApiDocController.class);
 
   private static final List<String> DEFAULT_INDEX_FILES = Arrays.asList("index.html", "index.htm");
 
@@ -58,10 +58,9 @@ public class ApiDocController {
 
   @GetMapping("/{groupId}/{artifactId}")
   String versions(Model model,
-      HttpServletRequest request,
       @PathVariable String groupId,
       @PathVariable String artifactId) throws RepositoryException {
-    logger.trace("groupId: {}, artifactId: {}.", groupId, artifactId, null);
+    LOG.trace("groupId: {}, artifactId: {}.", groupId, artifactId, null);
     ensureValidGroupId(groupId);
     List<String> versions = repositoryService.getAvailableVersions(groupId, artifactId);
     model.addAttribute("groupId", groupId);
@@ -75,11 +74,11 @@ public class ApiDocController {
       throw new AccessNotAllowedException("Access to groupId " + groupId + " not allowed!");
     }
   }
-  
+
   @GetMapping("/{groupId}/{artifactId}/{version:.*}")
   String base(@PathVariable String groupId, @PathVariable String artifactId,
       @PathVariable String version) throws AccessNotAllowedException {
-    logger.trace("groupId: {}, artifactId: {}, version: {}. redirect to index.html",
+    LOG.trace("groupId: {}, artifactId: {}, version: {}. redirect to index.html",
         groupId, artifactId, version);
     ensureValidGroupId(groupId);
     return "redirect:/{groupId}/{artifactId}/{version}/" + repositoryService.getDefaultClassifier()
@@ -91,7 +90,7 @@ public class ApiDocController {
       @PathVariable String artifactId,
       @PathVariable String version,
       @PathVariable String classifier) throws AccessNotAllowedException {
-    logger.trace("groupId: {}, artifactId: {}, version: {}, classifier: {}. redirect to index.html",
+    LOG.trace("groupId: {}, artifactId: {}, version: {}, classifier: {}. redirect to index.html",
         groupId, artifactId, version, classifier);
     ensureValidGroupId(groupId);
     return "redirect:/{groupId}/{artifactId}/{version}/{classifier}/index.html";
@@ -108,7 +107,7 @@ public class ApiDocController {
       HttpServletResponse response) throws RepositoryException {
 
     String subPath = getSubPath(classifier, groupId, artifactId, version, request);
-    logger.trace("groupId: {}, artifactId: {}, version: {}, classifier: {}, subPath :{}",
+    LOG.trace("groupId: {}, artifactId: {}, version: {}, classifier: {}, subPath :{}",
         groupId, artifactId, version, classifier, subPath);
     ensureValidGroupId(groupId);
 
@@ -182,7 +181,7 @@ public class ApiDocController {
     if (filename.endsWith(".js")) {
       return "application/javascript";
     }
-    logger.trace("resolved {} as mime type for filename {}", mimeType, filename);
+    LOG.trace("resolved {} as mime type for filename {}", mimeType, filename);
     return mimeType;
   }
 
@@ -193,7 +192,6 @@ public class ApiDocController {
       HttpServletRequest request) {
     String base = "/" + groupId + "/" + artifactId + "/" + version + "/" + classifier + "/";
     String path = request.getRequestURI();
-    String subPath = path.substring(base.length());
-    return subPath;
+    return path.substring(base.length());
   }
 }
