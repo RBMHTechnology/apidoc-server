@@ -107,10 +107,7 @@ public class ApiDocController {
   String base(@PathVariable String groupId, @PathVariable String artifactId,
       @PathVariable String version) throws AccessNotAllowedException {
     logger.trace("groupId: {}, artifactId: {}, version: {}. redirect to index.html",
-        groupId,
-        artifactId,
-        version,
-        null);
+        groupId, artifactId, version);
     ensureValidGroupId(groupId);
     return "redirect:/{groupId}/{artifactId}/{version}/" + repositoryService.getDefaultClassifier()
         + "/index.html";
@@ -122,10 +119,7 @@ public class ApiDocController {
       @PathVariable String version,
       @PathVariable String classifier) throws AccessNotAllowedException {
     logger.trace("groupId: {}, artifactId: {}, version: {}, classifier: {}. redirect to index.html",
-        groupId,
-        artifactId,
-        version,
-        classifier);
+        groupId, artifactId, version, classifier);
     ensureValidGroupId(groupId);
     return "redirect:/{groupId}/{artifactId}/{version}/{classifier}/index.html";
   }
@@ -142,11 +136,7 @@ public class ApiDocController {
 
     String subPath = getSubPath(classifier, groupId, artifactId, version, request);
     logger.trace("groupId: {}, artifactId: {}, version: {}, classifier: {}, subPath :{}",
-        groupId,
-        artifactId,
-        version,
-        classifier,
-        subPath);
+        groupId, artifactId, version, classifier, subPath);
     ensureValidGroupId(groupId);
 
     File jar = repositoryService.retrieveJarFile(groupId, artifactId, version, classifier);
