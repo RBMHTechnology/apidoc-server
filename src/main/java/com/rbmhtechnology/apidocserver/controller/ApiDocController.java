@@ -56,11 +56,6 @@ public class ApiDocController {
     this.groupIdWhitelistService = groupIdWhitelistService;
   }
 
-  @GetMapping("/")
-  String home(Model model, HttpServletRequest request) {
-    return "home";
-  }
-
   @GetMapping("/{groupId}/{artifactId}")
   String versions(Model model,
       HttpServletRequest request,
