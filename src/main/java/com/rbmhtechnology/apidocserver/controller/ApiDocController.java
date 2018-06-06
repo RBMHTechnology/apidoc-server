@@ -37,9 +37,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
@@ -81,7 +80,7 @@ public class ApiDocController {
     model.addAttribute("groupIdWhitelist", groupIdWhitelistService.getGroupIdPrefixWhitelist());
   }
 
-  @RequestMapping(value = "/", method = RequestMethod.GET)
+  @GetMapping("/")
   String home(Model model, HttpServletRequest request) {
 
     addBasicAttributes(model, request);
@@ -89,7 +88,7 @@ public class ApiDocController {
     return "home";
   }
 
-  @RequestMapping(value = "/{groupId}/{artifactId}", method = RequestMethod.GET)
+  @GetMapping("/{groupId}/{artifactId}")
   String versions(Model model,
       HttpServletRequest request,
       @PathVariable String groupId,
@@ -105,7 +104,7 @@ public class ApiDocController {
     return "listVersions";
   }
 
-  @RequestMapping(value = "/{groupId}/{artifactId}/{version:.*}", method = RequestMethod.GET)
+  @GetMapping("/{groupId}/{artifactId}/{version:.*}")
   String base(@PathVariable String groupId, @PathVariable String artifactId,
       @PathVariable String version) throws AccessNotAllowedException {
     logger.trace("groupId: {}, artifactId: {}, version: {}. rediret to index.html",
@@ -118,7 +117,7 @@ public class ApiDocController {
         + "/index.html";
   }
 
-  @RequestMapping(value = "/{groupId}/{artifactId}/{version:.*}/{classifier}", method = RequestMethod.GET)
+  @GetMapping(value = "/{groupId}/{artifactId}/{version:.*}/{classifier}")
   String base(@PathVariable String groupId,
       @PathVariable String artifactId,
       @PathVariable String version,
@@ -133,7 +132,7 @@ public class ApiDocController {
   }
 
   // see https://thecruskit.com/spring-pathvariable-and-truncation-after-dot-period/
-  @RequestMapping(value = "/{groupId}/{artifactId}/{version:.*}/{classifier}/**", method = RequestMethod.GET)
+  @GetMapping(value = "/{groupId}/{artifactId}/{version:.*}/{classifier}/**")
   @ResponseBody
   void serve(@PathVariable String groupId,
       @PathVariable String artifactId,
