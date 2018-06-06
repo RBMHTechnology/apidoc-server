@@ -15,23 +15,23 @@
  */
 package com.rbmhtechnology.apidocserver.service;
 
+import static java.util.Collections.emptyList;
+
 import com.google.common.base.Splitter;
 import java.util.List;
-import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 @Service
 public class GroupIdWhitelistService {
 
-  @Value("${groupid-prefix-whitelist:#{null}}")
-  private String groupIdPrefixWhitelistString;
-  private List<String> groupIdPrefixWhitelist;
+  private final List<String> groupIdPrefixWhitelist;
 
-  @PostConstruct
-  void init() {
-    if (!StringUtils.isEmpty(groupIdPrefixWhitelistString)) {
+  public GroupIdWhitelistService(
+      @Value("${groupid-prefix-whitelist:#{null}}") String groupIdPrefixWhitelistString) {
+    if (groupIdPrefixWhitelistString == null) {
+      groupIdPrefixWhitelist = emptyList();
+    } else {
       groupIdPrefixWhitelist = Splitter.on(",")
           .trimResults()
           .omitEmptyStrings()
@@ -44,16 +44,8 @@ public class GroupIdWhitelistService {
   }
 
   public boolean isValidGroupId(String groupId) {
-    if (groupIdPrefixWhitelist == null) {
-      return true;
-    }
-
-    for (String groupIdPrefix : groupIdPrefixWhitelist) {
-      if (groupId.startsWith(groupIdPrefix)) {
-        return true;
-      }
-    }
-    return false;
+    return groupIdPrefixWhitelist.isEmpty() ||
+        groupIdPrefixWhitelist.stream()
+            .anyMatch(groupId::startsWith);
   }
-
 }
