@@ -61,14 +61,15 @@ public class ApiDocController {
     this. repositoryUrl = mavenConfig.repositoryUrl();
   }
 
-  private void ensureValidGroupId(String groupId) throws AccessNotAllowedException {
-    if (!groupIdWhitelistService.isValidGroupId(groupId)) {
-      throw new AccessNotAllowedException("Access to groupId " + groupId + " not allowed!");
-    }
+  @GetMapping("/")
+  String home(Model model, HttpServletRequest request) {
+
+    addBasicAttributes(model, request);
+
+    return "home";
   }
 
   private void addBasicAttributes(Model model, HttpServletRequest request) {
-
     String baseUrl = request.getScheme() + "://"
         + (request.getHeader("Host") != null ? request.getHeader("Host") : "localhost");
 
@@ -78,14 +79,6 @@ public class ApiDocController {
     model.addAttribute("applicationVersion", getApplicationVersion());
     model.addAttribute("repositoryUrl", repositoryUrl);
     model.addAttribute("groupIdWhitelist", groupIdWhitelistService.getGroupIdPrefixWhitelist());
-  }
-
-  @GetMapping("/")
-  String home(Model model, HttpServletRequest request) {
-
-    addBasicAttributes(model, request);
-
-    return "home";
   }
 
   @GetMapping("/{groupId}/{artifactId}")
@@ -104,10 +97,16 @@ public class ApiDocController {
     return "listVersions";
   }
 
+  private void ensureValidGroupId(String groupId) throws AccessNotAllowedException {
+    if (!groupIdWhitelistService.isValidGroupId(groupId)) {
+      throw new AccessNotAllowedException("Access to groupId " + groupId + " not allowed!");
+    }
+  }
+  
   @GetMapping("/{groupId}/{artifactId}/{version:.*}")
   String base(@PathVariable String groupId, @PathVariable String artifactId,
       @PathVariable String version) throws AccessNotAllowedException {
-    logger.trace("groupId: {}, artifactId: {}, version: {}. rediret to index.html",
+    logger.trace("groupId: {}, artifactId: {}, version: {}. redirect to index.html",
         groupId,
         artifactId,
         version,
@@ -122,7 +121,7 @@ public class ApiDocController {
       @PathVariable String artifactId,
       @PathVariable String version,
       @PathVariable String classifier) throws AccessNotAllowedException {
-    logger.trace("groupId: {}, artifactId: {}, version: {}, classifier: {}. rediret to index.html",
+    logger.trace("groupId: {}, artifactId: {}, version: {}, classifier: {}. redirect to index.html",
         groupId,
         artifactId,
         version,
