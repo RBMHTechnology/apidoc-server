@@ -20,11 +20,9 @@ import com.rbmhtechnology.apidocserver.exception.AccessNotAllowedException;
 import com.rbmhtechnology.apidocserver.exception.RepositoryException;
 import com.rbmhtechnology.apidocserver.service.GroupIdWhitelistService;
 import com.rbmhtechnology.apidocserver.service.RepositoryService;
-import com.rbmhtechnology.apidocserver.service.mavenrepo.MavenRepositoryConfig;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarEntry;
@@ -50,35 +48,17 @@ public class ApiDocController {
 
   private final RepositoryService repositoryService;
   private final GroupIdWhitelistService groupIdWhitelistService;
-  private final URL repositoryUrl;
 
   @Autowired
   public ApiDocController(RepositoryService repositoryService,
-          GroupIdWhitelistService groupIdWhitelistService,
-          MavenRepositoryConfig mavenConfig) {
+      GroupIdWhitelistService groupIdWhitelistService) {
     this.repositoryService = repositoryService;
     this.groupIdWhitelistService = groupIdWhitelistService;
-    this. repositoryUrl = mavenConfig.repositoryUrl();
   }
 
   @GetMapping("/")
   String home(Model model, HttpServletRequest request) {
-
-    addBasicAttributes(model, request);
-
     return "home";
-  }
-
-  private void addBasicAttributes(Model model, HttpServletRequest request) {
-    String baseUrl = request.getScheme() + "://"
-        + (request.getHeader("Host") != null ? request.getHeader("Host") : "localhost");
-
-    model.addAttribute("name", repositoryService.getName());
-    model.addAttribute("baseUrl", baseUrl);
-    model.addAttribute("defaultClassifier", repositoryService.getDefaultClassifier());
-    model.addAttribute("applicationVersion", getApplicationVersion());
-    model.addAttribute("repositoryUrl", repositoryUrl);
-    model.addAttribute("groupIdWhitelist", groupIdWhitelistService.getGroupIdPrefixWhitelist());
   }
 
   @GetMapping("/{groupId}/{artifactId}")
@@ -92,8 +72,6 @@ public class ApiDocController {
     model.addAttribute("groupId", groupId);
     model.addAttribute("artifactId", artifactId);
     model.addAttribute("versions", versions);
-    addBasicAttributes(model, request);
-
     return "listVersions";
   }
 
@@ -222,10 +200,5 @@ public class ApiDocController {
     String path = request.getRequestURI();
     String subPath = path.substring(base.length());
     return subPath;
-  }
-
-  private String getApplicationVersion() {
-    String implementationVersion = getClass().getPackage().getImplementationVersion();
-    return implementationVersion == null ? "undefined" : "v" + implementationVersion;
   }
 }
