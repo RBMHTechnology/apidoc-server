@@ -15,6 +15,8 @@
  */
 package com.rbmhtechnology.apidocserver.service;
 
+import java.util.Objects;
+
 /**
  * Class containing the coordinates to a maven repository artifact
  */
@@ -25,7 +27,7 @@ public class ArtifactIdentifier {
   private final String artifactId;
   private final String version;
   private final String classifier;
-  private final boolean snapshot;
+  private final String type;
 
   /**
    * constructs an ArtifactIdentifier for the given coordinates
@@ -36,11 +38,24 @@ public class ArtifactIdentifier {
    * @param classifier classifier of the artifact
    */
   public ArtifactIdentifier(String groupId, String artifactId, String version, String classifier) {
+    this(groupId, artifactId, version, classifier, null);
+  }
+
+
+  public ArtifactIdentifier(String groupId, String artifactId, String version) {
+    this(groupId, artifactId, version, null, null);
+  }
+
+  public ArtifactIdentifier(String groupId, String artifactId, String version, String classifier,
+      String type) {
+    Objects.requireNonNull(groupId);
+    Objects.requireNonNull(artifactId);
+    Objects.requireNonNull(version);
     this.groupId = groupId;
     this.artifactId = artifactId;
     this.version = version;
     this.classifier = classifier;
-    this.snapshot = version.endsWith(SNAPSHOT_SUFFIX);
+    this.type = type == null ? "jar" : type;
   }
 
   @Override
@@ -68,7 +83,14 @@ public class ArtifactIdentifier {
    * @return true if the version is a snapshot version
    */
   public boolean isSnapshot() {
-    return snapshot;
+    return version.endsWith(SNAPSHOT_SUFFIX);
+  }
+
+  public String mavenLayout() {
+    return groupId.replace('.', '/') + "/"
+        + artifactId + "/"
+        + version + "/"
+        + artifactId + "-" + version + (classifier == null ? "" : ("-" + classifier)) + "." + type;
   }
 
   @Override
@@ -124,5 +146,4 @@ public class ArtifactIdentifier {
     }
     return true;
   }
-
 }

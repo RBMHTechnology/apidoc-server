@@ -51,8 +51,9 @@
           </li>
           <li><tt><b>classifier</b></tt> (optional): The documentation classifier to be shown.
             Typical values are <tt>javadoc</tt>, <tt>scaladoc</tt>, <tt>groovydoc</tt> and so on. If
-            omitted the configurable default value <tt><span
-                th:text="${defaultClassifier}">javadoc</span></tt> is used instead.
+            not present the server will present a list of available classifiers from the list of
+            expected classifiers: <tt><span th:text="${expectedClassifiers}">javadoc</span></tt>.
+            Given only a single classifier is available this will redirect directly to it.
           </li>
         </ul>
         </p>

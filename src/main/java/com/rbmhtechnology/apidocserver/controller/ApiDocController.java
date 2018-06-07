@@ -77,12 +77,23 @@ public class ApiDocController {
 
   @GetMapping("/{groupId}/{artifactId}/{version:.*}")
   String base(@PathVariable String groupId, @PathVariable String artifactId,
-      @PathVariable String version) throws AccessNotAllowedException {
+      @PathVariable String version, Model model) throws RepositoryException {
     LOG.trace("groupId: {}, artifactId: {}, version: {}. redirect to index.html",
         groupId, artifactId, version);
     ensureValidGroupId(groupId);
-    return "redirect:/{groupId}/{artifactId}/{version}/" + repositoryService.getDefaultClassifier()
-        + "/index.html";
+
+    final List<String> classifiers = repositoryService
+        .getAvailableClassifier(groupId, artifactId, version);
+
+    if (classifiers.size() == 1) {
+      return "redirect:/{groupId}/{artifactId}/{version}/" + classifiers.get(0)
+          + "/index.html";
+    }
+
+    model.addAttribute("groupId", groupId);
+    model.addAttribute("artifactId", artifactId);
+    model.addAttribute("classifiers", classifiers);
+    return "listClassifiers";
   }
 
   @GetMapping(value = "/{groupId}/{artifactId}/{version:.*}/{classifier}")

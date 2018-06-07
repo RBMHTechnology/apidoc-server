@@ -63,9 +63,9 @@ public class RepositoryService {
   private static final Logger LOG = LoggerFactory.getLogger(RepositoryService.class);
 
   private final String name;
-  private final String defaultClassifier;
   private final boolean snapshotsEnabled;
   private final File localJarStorage;
+  private final io.vavr.collection.List<String> classifiers;
   private final MavenRepoClient mavenClient;
 
   private LoadingCache<ArtifactIdentifier, File> snapshotDownloadUrlCache;
@@ -76,15 +76,15 @@ public class RepositoryService {
 
   public RepositoryService(
       @Value("${name:ApiDoc Server}") String name,
-      @Value("${default.classifier:javadoc}") String defaultClassifier,
       @Value("${repository.snapshots.enabled:true}") boolean snapshotsEnabled,
       @Value("${repository.snapshots.cache-timeout:1800}") int cacheTimeoutSeconds,
       @Value("${localstorage:#{null}}") File localstoragePath,
+      @Value("#{'${expected.classifier:javadoc,groovydoc,scaladoc}'.split(',')}") List<String> classifiers,
       MavenRepoClient mavenClient) {
     this.name = name;
-    this.defaultClassifier = defaultClassifier;
     this.snapshotsEnabled = snapshotsEnabled;
     this.localJarStorage = localStorageOrTempFile(localstoragePath);
+    this.classifiers = io.vavr.collection.List.ofAll(classifiers);
 
     this.snapshotDownloadUrlCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
@@ -112,6 +112,10 @@ public class RepositoryService {
       return localJarStorage;
     }
     return Files.createTempDir();
+  }
+
+  public io.vavr.collection.List<String> getExpectedClassifiers() {
+    return classifiers;
   }
 
 
@@ -379,10 +383,6 @@ public class RepositoryService {
     return name;
   }
 
-  public String getDefaultClassifier() {
-    return defaultClassifier;
-  }
-
   private final class ArtifactLoader extends CacheLoader<ArtifactIdentifier, File> {
 
     @Override
@@ -467,6 +467,20 @@ public class RepositoryService {
         classifier);
 
     return provideFileForArtifact(artifactIdentifier);
+  }
+
+  public List<String> getAvailableClassifier(String groupId, String artifactId,
+      String version) throws RepositoryException {
+    io.vavr.collection.List<ArtifactIdentifier> resourceNames = io.vavr.collection.List.empty();
+    for (String classifier : classifiers) {
+      resourceNames = resourceNames.append(
+          resolveArtifactIdentfier(groupId, artifactId, version, classifier)
+      );
+    }
+    return mavenClient.exists(resourceNames)
+        .filter(e -> e._2)
+        .map(e -> e._1)
+        .toJavaList();
   }
 
 }
