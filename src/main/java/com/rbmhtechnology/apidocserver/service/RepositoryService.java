@@ -79,7 +79,7 @@ public class RepositoryService {
       @Value("${repository.snapshots.enabled:true}") boolean snapshotsEnabled,
       @Value("${repository.snapshots.cache-timeout:1800}") int cacheTimeoutSeconds,
       @Value("${localstorage:#{null}}") File localstoragePath,
-      @Value("#{'${expected.classifier:javadoc,groovydoc,scaladoc}'.split(',')}") List<String> classifiers,
+      @Value("#{'${expected.classifiers:javadoc,groovydoc,scaladoc}'.split(',')}") List<String> classifiers,
       MavenRepoClient mavenClient) {
     this.name = name;
     this.snapshotsEnabled = snapshotsEnabled;
