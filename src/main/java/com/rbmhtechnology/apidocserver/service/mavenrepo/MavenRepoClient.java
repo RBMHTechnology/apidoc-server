@@ -15,9 +15,17 @@
  */
 package com.rbmhtechnology.apidocserver.service.mavenrepo;
 
+import static java.lang.String.format;
+
+import com.rbmhtechnology.apidocserver.exception.AccessNotAllowedException;
 import com.rbmhtechnology.apidocserver.exception.DownloadException;
 import com.rbmhtechnology.apidocserver.exception.NotFoundException;
 import com.rbmhtechnology.apidocserver.exception.RepositoryException;
+import com.rbmhtechnology.apidocserver.service.ArtifactIdentifier;
+import io.vavr.collection.List;
+import io.vavr.collection.Map;
+import io.vavr.control.Try;
+import java.io.File;
 import org.apache.maven.wagon.ConnectionException;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.TransferFailedException;
@@ -30,8 +38,6 @@ import org.apache.maven.wagon.shared.http.BasicAuthScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import java.io.File;
 
 @Component
 public class MavenRepoClient {
@@ -63,15 +69,51 @@ public class MavenRepoClient {
     try {
       httpWagon.connect(repository, authenticationInfo);
       httpWagon.get(resourceName, destination);
-      httpWagon.disconnect();
     } catch (ResourceDoesNotExistException e) {
       throw new NotFoundException("No jar at '" + resourceName + "', failed with status:" + e.getMessage());
     } catch (AuthorizationException | AuthenticationException e) {
       throw new DownloadException("Access denied for " + resourceName + "', failed with status:"
-              + e.getMessage());
+          + e.getMessage());
     } catch (TransferFailedException | ConnectionException e) {
       throw new DownloadException("Transfer failed for " + resourceName + "', failed with status:"
-              + e.getMessage());
+          + e.getMessage());
+    } finally {
+      disconnectQuietly();
     }
+  }
+
+  private void disconnectQuietly() {
+    try {
+      httpWagon.disconnect();
+    } catch (ConnectionException e) {
+      LOG.warn("Unable to disconnect from " + repository.getUrl() + ", reason:" + e
+          .getMessage());
+    }
+  }
+
+  public Map<String, Boolean> exists(List<ArtifactIdentifier> resources)
+      throws RepositoryException {
+    try {
+
+      httpWagon.connect(repository, authenticationInfo);
+      return resources
+          .toMap(ArtifactIdentifier::getClassifier, r -> existsQuietly(r.mavenLayout()));
+
+    } catch (AuthenticationException e) {
+      throw new AccessNotAllowedException(format("Access Denied to repository '%s' reason: %s",
+          repository.getUrl(), e.getMessage()));
+    } catch (ConnectionException e) {
+      throw new RepositoryException(format("Connection problem to repository '%s' reason: %s",
+          repository.getUrl(), e.getMessage()));
+    } finally {
+      disconnectQuietly();
+    }
+  }
+
+  private boolean existsQuietly(String resourceName) {
+    return Try.of(() -> httpWagon.resourceExists(resourceName))
+        .onFailure(t -> LOG.warn(format("Unable to check if resource '%s' exists: reason%s",
+            resourceName, t.getMessage())))
+        .getOrElse(false);
   }
 }

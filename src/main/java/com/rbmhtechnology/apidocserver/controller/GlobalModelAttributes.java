@@ -45,8 +45,11 @@ public class GlobalModelAttributes {
   public void globalAttributes(Model model, HttpServletRequest request) {
     model.addAttribute("name", repositoryService.getName());
     model.addAttribute("baseUrl", baseUrl(request));
-    model.addAttribute("defaultClassifier", repositoryService.getDefaultClassifier());
     model.addAttribute("applicationVersion", applicationVersion());
+    model.addAttribute("expectedClassifiers", repositoryService.getExpectedClassifiers()
+        .intersperse(", ")
+        .foldLeft(new StringBuilder(), StringBuilder::append)
+        .toString());
     model.addAttribute("repositoryUrl", repositoryUrl);
     model.addAttribute("groupIdWhitelist", groupIdWhitelistService.getGroupIdPrefixWhitelist());
   }
