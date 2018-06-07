@@ -26,7 +26,7 @@ The URL parts have following meaning:
 * `groupId` (mandatory): The group identifier of the artifact, e.g. `org.apache.commons`.
 * `artifactId` (mandatory): The artifact identifier, e.g. `commons-lang3`.
 * `version` (optional): The version identifier of the artifact, e.g. `3.3.2`. In case the version identifier is emitted, all available versions are listed.
-* `classifier` (optional): The documentation classifier to be shown. Typical values are `javadoc`, `scaladoc`, `groovydoc` and so on. If omitted the configurable default value `javadoc` is used instead.
+* `classifier` (optional): The documentation classifier to be shown. Typical values are `javadoc`, `scaladoc`, `groovydoc` and so on.
 
 The `version` part supports two special version references, which are obtained from the corresponding `maven-metadata.xml`:
 
@@ -87,9 +87,9 @@ Starting with this option will restrict the access to groups starting with org.s
 
 Due to the nature of snapshots, the actual artifact will change frequently and the ApiDoc Server needs to check this from time to time. The default approach is to cache resolved snapshots for 30 minutes, after this time the artifact is being removed. With the next request the artifact is freshly resolved and downloaded. To tweak the cache timeout set the property `repository.snapshots.cache-timeout` to the appropriate amount of seconds.
 
-#### Default Classifier
+#### Expected Classifiers
 
-If no documentation classifier (e.g. like `javadoc`, `groovydoc`, `scaladoc`, and so on) is specified within the incoming request the ApiServer will use a default documentation classifier as fallback, which is `javadoc`. You can change the default documentation classifier from `javadoc` to any other value by setting the property `default.classifier`.
+Given the nature of a simple maven repository there is no easy way to list all available classifiers. The ApiDoc server therefore must know which documentation classifiers it will test whether they are available on the repository. ou can change the default documentation classifier by setting the property `expected.classifiers`. Default values are: `javadoc`, `groovydoc`, `scaladoc` 
 
 #### Naming
 
