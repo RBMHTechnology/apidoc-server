@@ -217,7 +217,7 @@ public class ApiDocController {
 			return "text/css";
 		}
 		if (filename.endsWith(".js")) {
-			return "text/js";
+			return "application/javascript";
 		}
 		logger.trace("resolved {} as mime type for filename {}", mimeType, filename);
 		return mimeType;
