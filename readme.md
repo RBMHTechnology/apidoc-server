@@ -25,8 +25,8 @@ The URL parts have following meaning:
 
 * `groupId` (mandatory): The group identifier of the artifact, e.g. `org.apache.commons`.
 * `artifactId` (mandatory): The artifact identifier, e.g. `commons-lang3`.
-* `version` (optional): The version identifier of the artifact, e.g. `3.3.2`. In case the version identifier is emitted, all available versions are listed.
-* `classifier` (optional): The documentation classifier to be shown. Typical values are `javadoc`, `scaladoc`, `groovydoc` and so on.
+* `version` (optional): The version identifier of the artifact, e.g. `3.3.2`. In case the version identifier is omitted, all available versions are listed.
+* `classifier` (optional): The documentation classifier to be shown. Typical values are `javadoc`, `scaladoc`, `groovydoc` and so on. In case the value is omitted, all expected and available `classifier` are listed. If only a single `classifier` is present a redirect to this artifact will be performed.
 
 The `version` part supports two special version references, which are obtained from the corresponding `maven-metadata.xml`:
 
