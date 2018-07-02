@@ -106,5 +106,5 @@ To build and launch the ApiDoc Server directly from the sources you may want to 
 Unfortunately, you are not able to provide properties to the ApiDoc Server in way stated before. But you are able to provide the path to an application.properties file by setting the gradle project property `application.propeties` in the following way.
 
 ```
-./gradlew bootRun -Papplication.properties=/path/to/my/application.properties
+./gradlew bootRun -PapplicationProperties=/path/to/my/application.properties
 ```
