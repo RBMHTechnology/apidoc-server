@@ -56,4 +56,10 @@ bootRun {
     }
 }
 
+run {
+    if (project.hasProperty('applicationProperties')) {
+        systemProperty 'spring.config.location', "file:${applicationProperties}"
+    }
+}
+
 wrapper.gradleVersion = '4.8.1'
