@@ -89,7 +89,7 @@ Due to the nature of snapshots, the actual artifact will change frequently and t
 
 #### Expected Classifiers
 
-Given the nature of a simple maven repository there is no easy way to list all available classifiers. The ApiDoc server therefore must know which documentation classifiers it will test whether they are available on the repository. ou can change the default documentation classifier by setting the property `expected.classifiers`. Default values are: `javadoc`, `groovydoc`, `scaladoc` 
+Given the nature of a simple maven repository there is no easy way to list all available classifiers. The ApiDoc server therefore must know which documentation classifiers it will test whether they are available on the repository. You can change the default documentation classifier by setting the property `expected.classifiers`. Default values are: `javadoc`, `groovydoc`, `scaladoc` 
 
 #### Naming
 
