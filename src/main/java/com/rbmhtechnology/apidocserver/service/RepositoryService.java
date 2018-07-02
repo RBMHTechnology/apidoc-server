@@ -480,6 +480,7 @@ public class RepositoryService {
     return mavenClient.exists(resourceNames)
         .filter(e -> e._2)
         .map(e -> e._1)
+        .sorted()
         .toJavaList();
   }
 
