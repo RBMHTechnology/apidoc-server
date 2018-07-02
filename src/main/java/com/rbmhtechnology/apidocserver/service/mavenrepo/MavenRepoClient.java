@@ -50,14 +50,15 @@ public class MavenRepoClient {
 
   public MavenRepoClient(MavenRepositoryConfig config) {
     this.httpWagon = new HttpWagon();
+    final BasicAuthScope scope = new BasicAuthScope();
+    scope.setHost(config.repositoryHost());
+    scope.setPort(String.valueOf(config.repositoryPort()));
+    this.httpWagon.setBasicAuthScope(scope);
+
     this.authenticationInfo = config.getCredentials().map(c -> {
       final AuthenticationInfo authInfo = new AuthenticationInfo();
       authInfo.setUserName(c.username());
       authInfo.setPassword(c.password());
-      BasicAuthScope scope = new BasicAuthScope();
-      scope.setHost(config.repositoryHost());
-      scope.setPort(String.valueOf(config.repositoryPort()));
-      httpWagon.setBasicAuthScope(scope);
       return authInfo;
     }).getOrElse((AuthenticationInfo) null);
 
