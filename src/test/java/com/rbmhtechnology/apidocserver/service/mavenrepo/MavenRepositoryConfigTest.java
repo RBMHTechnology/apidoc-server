@@ -15,9 +15,9 @@
  */
 package com.rbmhtechnology.apidocserver.service.mavenrepo;
 
-import static com.rbmhtechnology.apidocserver.testhelper.OptionAssert.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.vavr.api.VavrAssertions.assertThat;
 
 import com.rbmhtechnology.apidocserver.service.mavenrepo.MavenRepositoryConfig.Credentials;
 import java.net.MalformedURLException;
@@ -36,14 +36,14 @@ public class MavenRepositoryConfigTest {
   public void given_no_user_name_credentials_are_empty() throws MalformedURLException {
     final MavenRepositoryConfig config = new MavenRepositoryConfig(URI
         .create("http://example.com").toURL(), null, "bar");
-    assertThat(config.getCredentials()).isNotDefined();
+    assertThat(config.getCredentials()).isEmpty();
   }
 
   @Test
   public void given_no_password_credentials_are_empty() throws MalformedURLException {
     final MavenRepositoryConfig config = new MavenRepositoryConfig(URI
         .create("http://example.com").toURL(), "foo", null);
-    assertThat(config.getCredentials()).isNotDefined();
+    assertThat(config.getCredentials()).isEmpty();
   }
 
   @Test
