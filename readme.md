@@ -108,3 +108,31 @@ Unfortunately, you are not able to provide properties to the ApiDoc Server in wa
 ```
 ./gradlew bootRun -PapplicationProperties=/path/to/my/application.properties
 ```
+
+### Protecting the server using OpenID Connect
+
+You can secure access to the ApiDocServer using the [OpenID Connect Code Flow](http://openid.net/specs/openid-connect-basic-1_0.html). We have integrated an [OpenID Connect Client](http://mitreid-connect.github.io/openid-connect-client/index.html) which can be activated using the Spring profile `openid`. In this case the server must be accessible over https only. Configuration is done using the following values:
+
+```
+# Spring SSL/TLS configuration, see https://docs.spring.io/spring-boot/docs/1.5.15.RELEASE/reference/htmlsingle/#howto-configure-ssl
+server.port=8443
+server.ssl.key-store=src/main/resources/keystore.p12
+server.ssl.key-store-password=mypassword
+server.ssl.keyStoreType=PKCS12
+server.ssl.keyAlias=tomcat
+
+# Configuration of you OpenID Connect Authorization server
+idp.url=http://localhost:9094
+idp.issuer=http://localhost:9094
+idp.authorizationEndpointUri=http://localhost:9094/oidc-login
+idp.tokenEndpointUri=http://localhost:9094/token
+idp.userInfoUri=http://localhost:9094/userinfo
+idp.jwksUri=http://localhost:9094/jwks.json
+
+# Configuration of you OpenID Connect client
+client.id=foo
+client.secret=bar
+client.scope=baz
+client.redirectUri=https://localhost:8443/openid_connect_login
+client.tokenEndpointAuthMethod=SECRET_BASIC
+```
