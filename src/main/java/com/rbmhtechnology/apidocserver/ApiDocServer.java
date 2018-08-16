@@ -29,26 +29,30 @@ public class ApiDocServer {
 
   private static final Logger LOG = LoggerFactory.getLogger(ApiDocServer.class);
 
-  public static void main(String[] args) throws UnknownHostException {
+  public static void main(String[] args) {
     final SpringApplication app = new SpringApplication(ApiDocServer.class);
-    final Environment env = app.run(args).getEnvironment();
-    final String hostAddress = InetAddress.getLocalHost().getHostAddress();
-    final String serverPort = env.getProperty("server.port", "8080");
-    LOG.info(
-        "Application URLs:\n----------------------------------------------------------\n\t"
-            + "Local: \t\thttp://127.0.0.1:{}\n\t"
-            + "External: \thttp://{}:{}\n----------------------------------------------------------",
-        serverPort,
+    Environment env = app.run(args).getEnvironment();
+    String protocol = "http";
+    if (env.getProperty("server.ssl.key-store") != null) {
+      protocol = "https";
+    }
+    String hostAddress = "localhost";
+    try {
+      hostAddress = InetAddress.getLocalHost().getHostAddress();
+    } catch (Exception e) {
+      LOG.warn("The host name could not be determined, using `localhost` as fallback");
+    }
+    LOG.info("\n----------------------------------------------------------\n\t" +
+            "Application '{}' is running! Access URLs:\n\t" +
+            "Local: \t\t{}://localhost:{}\n\t" +
+            "External: \t{}://{}:{}\n\t" +
+            "Profile(s): \t{}\n----------------------------------------------------------",
+        env.getProperty("spring.application.name"),
+        protocol,
+        env.getProperty("server.port"),
+        protocol,
         hostAddress,
-        serverPort);
-
-    final String managementPort = env.getProperty("management.port", "8080");
-    LOG.info(
-        "Management URLs:\n----------------------------------------------------------\n\t"
-            + "Local: \t\thttp://127.0.0.1:{}/health\n\t"
-            + "External: \thttp://{}:{}/health\n----------------------------------------------------------",
-        managementPort,
-        hostAddress,
-        managementPort);
+        env.getProperty("server.port"),
+        env.getActiveProfiles());
   }
 }
