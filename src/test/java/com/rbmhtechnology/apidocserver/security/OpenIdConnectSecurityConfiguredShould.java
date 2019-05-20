@@ -30,4 +30,10 @@ public class OpenIdConnectSecurityConfiguredShould {
         .andExpect(redirectedUrl("http://localhost/openid_connect_login"));
   }
 
+
+  @Test
+  public void healthcheck_remains_unauthenticated() throws Exception {
+    mockMvc.perform(get("/health"))
+        .andExpect(status().isOk());
+  }
 }
