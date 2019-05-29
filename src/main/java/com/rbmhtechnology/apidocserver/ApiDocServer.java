@@ -17,7 +17,6 @@
 package com.rbmhtechnology.apidocserver;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
