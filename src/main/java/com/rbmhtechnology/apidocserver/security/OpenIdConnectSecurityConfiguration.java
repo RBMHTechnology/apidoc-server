@@ -37,7 +37,7 @@ public class OpenIdConnectSecurityConfiguration extends WebSecurityConfigurerAda
         .addFilterBefore(authenticationFilter, AbstractPreAuthenticatedProcessingFilter.class)
         .exceptionHandling().authenticationEntryPoint(authenticationEntryPoint)
         .and().authorizeRequests()
-        .antMatchers("/health").permitAll()
+        .antMatchers("/actuator/health").permitAll()
         .anyRequest().authenticated();
   }
 }
