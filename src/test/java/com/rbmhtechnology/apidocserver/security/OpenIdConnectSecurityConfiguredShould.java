@@ -33,7 +33,7 @@ public class OpenIdConnectSecurityConfiguredShould {
 
   @Test
   public void healthcheck_remains_unauthenticated() throws Exception {
-    mockMvc.perform(get("/health"))
+    mockMvc.perform(get("/actuator/health"))
         .andExpect(status().isOk());
   }
 }
