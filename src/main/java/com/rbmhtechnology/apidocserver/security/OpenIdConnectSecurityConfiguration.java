@@ -39,5 +39,7 @@ public class OpenIdConnectSecurityConfiguration extends WebSecurityConfigurerAda
         .and().authorizeRequests()
         .antMatchers("/actuator/health").permitAll()
         .anyRequest().authenticated();
+
+    http.headers().frameOptions().sameOrigin();
   }
 }
