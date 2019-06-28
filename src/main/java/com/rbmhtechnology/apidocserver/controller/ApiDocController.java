@@ -192,6 +192,9 @@ public class ApiDocController {
     if (filename.endsWith(".js")) {
       return "application/javascript";
     }
+    if (filename.endsWith(".svg")) {
+      return "image/svg+xml";
+    }
     LOG.trace("resolved {} as mime type for filename {}", mimeType, filename);
     return mimeType;
   }
